@@ -12,13 +12,13 @@ end limonada;
 
 architecture logic of limonada is
 
-	constant attrNumber 	: natural := 8;
-	constant xTreinoIDX	: natural := 4296;
-	constant xTesteIDX	: natural := 6144;
-	constant yTreinoIDX	: natural := 6681;
-	constant yTesteIDX	: natural := 6912;
-	constant ram_depth 	: natural := 8192;
-	constant ram_width 	: natural := 32;
+	constant attrNumber 	: integer := 8;
+	constant xTreinoIDX	: integer := 4296;
+	constant xTesteIDX	: integer := 6144;
+	constant yTreinoIDX	: integer := 6681;
+	constant yTesteIDX	: integer := 6912;
+	constant ram_depth 	: integer := 8192;
+	constant ram_width 	: integer := 32;
 
 	type ram_type is array (0 to ram_depth - 1)
 		of std_logic_vector(ram_width - 1 downto 0);
@@ -73,16 +73,41 @@ architecture logic of limonada is
 	
 	signal ram: ram_type := init_ram_hex;
 	
+	pure function raizQ (vop  : unsigned(15 downto 0)  
+								)
+		variable vone : unsigned(15 downto 0);
+		variable vres : unsigned(15 downto 0);  
+	begin
+			vone := to_unsigned(2**(14),16);
+			vop  := unsigned(value);
+			vres := (others=>'0'); 
+			while (vone /= 0) loop
+				if (vop >= vres+vone) then
+					vop   := vop - (vres+vone);
+					vres  := vres/2 + vone;
+				else
+					vres  := vres/2;
+				end if;
+				vone := vone/4;
+			end loop;
+			result <= vres(result'range);
+			return result;
+		end function;
+	
 	pure function euclides (ram_content: ram_type := ram;
 									contador	  : unsigned
 									) return unsigned is
 		variable soma : unsigned;
+		variable index: integer;
+		variable sqrt : unsigned;
 	begin
 	
 		for contTreino in 0 to 536 loop 
 			for i in 0 to attrNumber - 1 loop
-				soma := soma + 1 sll (unsigned(ram_content(xTreinoIDX + 1 + i + contador*attrNumber)) - unsigned(ram_content(i + contTreino*attrNumber)));
+				index:= xTreinoIDX + 1 + i + to_integer(contador)*attrNumber;
+				soma := soma + (unsigned(ram_content(index)) - unsigned(ram_content(i + contTreino*attrNumber)))*(unsigned(ram_content(index)) - unsigned(ram_content(i + contTreino*attrNumber)));
 			end loop;
+			sqrt := raizQ(soma);
 		end loop;
 	end function;
 	
